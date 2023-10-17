@@ -9,9 +9,7 @@ import { Camera } from 'expo-camera';
 import DatePicker from '../../components/DatePicker';
 import { ToastAndroid } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
-import * as SQLite from "expo-sqlite";
 import * as FileSystem from 'expo-file-system';
-import { insertAsset } from '../../db/Asset.table';
 import { useUserStore } from '../../store/user.store';
 import { createAsset } from '../../firebase';
 
@@ -24,14 +22,10 @@ const AddAsset = ({ navigation }) => {
   const [capturedImg, setCapturedImg] = useState(null);
   const [previewAvailable, setPreviewAvailable] = useState(false);
   const [date, setDate] = useState(new Date());
-  const [unit, setUnit] = useState("");
-  const [teamLead, setTeamLead] = useState("");
   const [loading, setLoading] = useState(false);
   const {user} = useUserStore();
   const [ratio, setRatio] = useState("4:3");
   const { height, width } = Dimensions.get("window");
-  const permanentDirectory = FileSystem.documentDirectory;
-  const filePath = `${permanentDirectory}images`
   const [camera, setCamera] = useState(null);
 
   const initCamera = async () => {

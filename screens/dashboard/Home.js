@@ -1,5 +1,5 @@
-import { View, ScrollView, Image, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, ScrollView, Image, Text, StyleSheet, TouchableOpacity, Platform, RefreshControl } from 'react-native'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AssetCard from '../../components/AssetCard';
@@ -14,10 +14,12 @@ const Home = observer(({ navigation }) => {
   const [showList, setShowList] = useState(false);
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const { user } = useUserStore();
 
   const handleGetAssetsResponse = (data, err) => {
     setLoading(false);
+    setRefreshing(false);
     if(data) {
         console.log("Assets Fetched");
         setAssets(data);
@@ -34,6 +36,10 @@ const Home = observer(({ navigation }) => {
   const handleGetAssets = () => {
     getAllAsset(user.id, handleGetAssetsResponse);
   }
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    handleGetAssets();
+  }, [])
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       handleGetAssets();
@@ -53,7 +59,15 @@ const Home = observer(({ navigation }) => {
         backgroundColor: "#f3f3f3",
       }}
     >
-        <View style={{ padding: 15 }}>
+        <ScrollView style={{ padding: 15, flex: 1 }} refreshControl={
+          <RefreshControl 
+            refreshing={refreshing}
+            progressViewOffset={40}
+            colors={["#00597D"]}
+            tintColor={"#00435e"}
+            onRefresh={onRefresh}
+          />
+        } >
           <View style={styles.profile}>
             <Image source={require("../../assets/images/profile.png")} style={{ borderRadius: 22, height: 44, width: 44 }}/>
             <View>
@@ -91,7 +105,7 @@ const Home = observer(({ navigation }) => {
                   <ActivityIndicator animating={true} color="#00435e" size={"large"} />
                 </View>)
          }
-        </View>
+        </ScrollView>
       <TouchableOpacity style={[styles.add, styles.shadow]} onPress={() => navigation.navigate("AddAsset")}>
         <Entypo name="plus" color={"#00435e"} size={25}/>
       </TouchableOpacity>

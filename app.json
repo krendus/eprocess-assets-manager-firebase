@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "eProcess Assets Manager",
-    "slug": "asset-manager",
+    "name": "Assets Manager",
+    "slug": "asset-manager-firebase",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -41,7 +41,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "3701bf3f-4f0b-4a1d-94ee-03d2df202aa4"
+        "projectId": "66dcc8df-629b-4406-8b13-6615328dc475"
       }
     },
     "owner": "krendus"

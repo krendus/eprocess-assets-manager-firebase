@@ -1,10 +1,9 @@
-import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity, ToastAndroid, Alert, Dimensions } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity, ToastAndroid, Alert, Dimensions, RefreshControl, Platform } from 'react-native'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AntDesign from "react-native-vector-icons/AntDesign"
+import AntDesign from "react-native-vector-icons/AntDesign";
+import EvilIcons from "react-native-vector-icons/EvilIcons";
 import { LinearGradient } from 'expo-linear-gradient';
-import * as SQLite from "expo-sqlite";
-import { selectSingleAsset } from '../../db/Asset.table';
 import { useUserStore } from '../../store/user.store';
 import { getSingleAsset } from '../../firebase';
 import { ActivityIndicator } from 'react-native-paper';
@@ -13,10 +12,12 @@ const ViewAsset = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const {user} = useUserStore();
   const { id } = route.params;
   const handleGetAssetResponse = (data, err) => {
     setLoading(false);
+    setRefreshing(false);
     if(data) {
         console.log("Asset Fetched");
         setAsset(data);
@@ -33,6 +34,10 @@ const ViewAsset = ({ route, navigation }) => {
   const handleGetSingleAsset = () => {
     getSingleAsset(id, handleGetAssetResponse);
   }
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    handleGetSingleAsset();
+  })
   useEffect(() => {
     if(id) { 
       const unsubscribe = navigation.addListener("focus", () => {
@@ -55,11 +60,47 @@ const ViewAsset = ({ route, navigation }) => {
     >
       {
         !loading ? (
-            <ScrollView showsVerticalScrollIndicator={false}>
-            <View>
-              <Image source={{ uri: asset?.status === "Returned" ? asset?.return_image : asset?.image }} style={{ height: 300, width: "100%" }} />
-              <View style={styles.cover}></View>
-            </View>
+            <ScrollView 
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  progressViewOffset={40}
+                  colors={["#00597D"]}
+                  tintColor={"#00435e"}
+                  onRefresh={onRefresh}
+                />
+              }
+            >
+            {
+              asset?.status === "Returned" ? (
+                <View>
+                  <View style={styles.imageGrid}>
+                    <Image source={{ uri: asset?.image }}  style={{ height: 300, width: Dimensions.get("window").width / 2 - 1 }} />
+                    <View style={{ width: 2, backgroundColor: "#fff"}}></View>
+                    <Image source={{ uri: asset?.return_image }} style={{ height: 300, width:  Dimensions.get("window").width / 2 - 1 }} />
+                  </View>
+                  <View style={styles.cover}></View>
+                  <View style={styles.tagLeft}>
+                    <EvilIcons name="image" size={14} color={"#00597D"}/>
+                    <Text style={styles.tagText}>Previous</Text>
+                  </View>
+                  <View style={styles.tagRight}>
+                    <EvilIcons name="image" size={14} color={"#00597D"}/>
+                    <Text style={styles.tagText}>Current</Text>
+                  </View>
+                </View>
+              ) : (
+                <View>
+                  <Image source={{ uri: asset?.status === "Returned" ? asset?.return_image : asset?.image }} style={{ height: 300, width: "100%" }} />
+                  <View style={styles.cover}></View>
+                  <View style={styles.tagLeft}>
+                    <EvilIcons name="image" size={14} color={"#00597D"}/>
+                    <Text style={styles.tagText}>Current</Text>
+                  </View>
+                </View>
+              )
+            }
             <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
                 <AntDesign size={25} color={"#fff"}name="arrowleft"/>
             </TouchableOpacity>
@@ -167,7 +208,7 @@ const styles = StyleSheet.create({
     cover: {
       height: 300,
       width: "100%",
-      backgroundColor: "#00000066",
+      backgroundColor: "#00000055",
       position: "absolute",
       top: 0,
       left: 0,
@@ -185,6 +226,55 @@ const styles = StyleSheet.create({
       textAlign: "center",
       fontSize: 16,
       fontFamily: "Nunito_700Bold"
+    },
+    imageGrid: {
+      flexDirection: "row",
+      position: 'relative',
+    },
+    blur: {
+      width: 15,
+      height: 300,
+      position: "absolute",
+      top: 0,
+      left: Dimensions.get("window").width / 2 - 15,
+    },
+    blurRight: {
+      width: 15,
+      height: 300,
+      position: "absolute",
+      top: 0,
+      left: Dimensions.get("window").width / 2,
+    },
+    tagLeft: {
+      position: "absolute",
+      top: 190,
+      left: 20,
+      flexDirection: "row",
+      alignItems: "center",
+      columnGap: 3,
+      height: 22,
+      paddingHorizontal: 10,
+      borderRadius: 40,
+      zIndex: 9,
+      backgroundColor: "#f3f3f3"
+    },
+    tagRight: {
+      position: "absolute",
+      top: 190,
+      left: 20 + Dimensions.get("window").width / 2,
+      flexDirection: "row",
+      alignItems: "center",
+      columnGap: 3,
+      height: 22,
+      paddingHorizontal: 10,
+      borderRadius: 40,
+      zIndex: 9,
+      backgroundColor: "#f3f3f3"
+    },
+    tagText: {
+      fontFamily: "Nunito_600SemiBold",
+      fontSize: 11,
+      color: "#00597D"
     }
 })
 
